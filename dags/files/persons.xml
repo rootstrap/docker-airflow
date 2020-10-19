@@ -1,0 +1,20 @@
+<persons>
+    <person id="1">
+        <firstname>James</firstname>
+        <lastname>Smith</lastname>
+        <middlename></middlename>
+        <dob_year>1980</dob_year>
+        <dob_month>1</dob_month>
+        <gender>M</gender>
+        <salary currency="Euro">10000</salary>
+    </person>
+    <person id="2">
+        <firstname>Michael</firstname>
+        <lastname></lastname>
+        <middlename>Rose</middlename>
+        <dob_year>1990</dob_year>
+        <dob_month>6</dob_month>
+        <gender>M</gender>
+        <salary currency="Dollor">10000</salary>
+    </person>
+</persons>

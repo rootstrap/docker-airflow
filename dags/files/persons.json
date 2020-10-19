@@ -1,0 +1,39 @@
+{
+  "fields": [
+    {
+      "name": "firstname",
+      "nullable": true,
+      "metadata": {},
+      "type": "string"
+    },
+     {
+      "name": "lastname",
+      "nullable": true,
+      "metadata": {},
+      "type": "string"
+    },
+     {
+      "name": "middlename",
+      "nullable": true,
+      "metadata": {},
+      "type": "string"
+    },
+    {
+      "name": "dob_year",
+      "nullable": true,
+      "metadata": {},
+      "type": "integer"
+    },
+    {
+      "name": "dob_month",
+      "nullable": true,
+      "metadata": {},
+      "type": "integer"
+    },
+     {
+      "name": "gender",
+      "nullable": true,
+      "metadata": {},
+      "type": "string"
+    }]
+}
