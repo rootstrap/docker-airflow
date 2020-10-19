@@ -47,6 +47,7 @@ RUN set -ex \
         default-libmysqlclient-dev \
         apt-utils \
         curl \
+        wget \
         rsync \
         netcat \
         locales \
@@ -61,6 +62,9 @@ RUN set -ex \
     && pip install pyasn1 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis==3.2' \
+    && pip uninstall -y SQLAlchemy \
+    && pip install SQLAlchemy==1.3.15 \
+    && pip install boto3 botocore \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
@@ -72,13 +76,29 @@ RUN set -ex \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base
-
+# JAVA
+RUN wget https://download.java.net/openjdk/jdk14/ri/openjdk-14+36_linux-x64_bin.tar.gz -O /tmp/openjdk-14+36_linux-x64_bin.tar.gz \
+    && mkdir /usr/lib/jvm/ \
+    && tar xfvz /tmp/openjdk-14+36_linux-x64_bin.tar.gz --directory /usr/lib/jvm/
+ 
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 
 EXPOSE 8080 5555 8793
+
+# spark
+ARG APACHE_MIRROR_SERVER=http://www-us.apache.org
+ARG SPARK_VERSION=3.0.1
+ARG HADOOP_VERSION=2.7 
+ 
+RUN wget -q -O - ${APACHE_MIRROR_SERVER}/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz | tar -xzf - -C / \
+    && mv /spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /spark 
+
+ENV SPARK_HOME /spark
+ENV JAVA_HOME /usr/lib/jvm/jdk-14
+ENV PATH $JAVA_HOME/bin:$PATH
 
 USER airflow
 WORKDIR ${AIRFLOW_USER_HOME}
