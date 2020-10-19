@@ -77,9 +77,13 @@ RUN set -ex \
         /usr/share/doc \
         /usr/share/doc-base
 # JAVA
-RUN wget https://download.java.net/openjdk/jdk14/ri/openjdk-14+36_linux-x64_bin.tar.gz -O /tmp/openjdk-14+36_linux-x64_bin.tar.gz \
-    && mkdir /usr/lib/jvm/ \
-    && tar xfvz /tmp/openjdk-14+36_linux-x64_bin.tar.gz --directory /usr/lib/jvm/
+RUN apt-get update \
+    && mkdir -p /usr/share/man/man1 \
+    && apt-get install -y openjdk-11-jre-headless \
+    && apt-get install -y openjdk-11-jre \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
  
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
@@ -97,7 +101,7 @@ RUN wget -q -O - ${APACHE_MIRROR_SERVER}/dist/spark/spark-${SPARK_VERSION}/spark
     && mv /spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /spark 
 
 ENV SPARK_HOME /spark
-ENV JAVA_HOME /usr/lib/jvm/jdk-14
+ENV JAVA_HOME /usr/
 ENV PATH $JAVA_HOME/bin:$PATH
 
 USER airflow
