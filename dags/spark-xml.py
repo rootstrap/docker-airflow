@@ -32,7 +32,7 @@ spark_submit_task = SparkSubmitOperator(
     name='airflowspark-test',
     packages='com.databricks:spark-xml_2.12:0.6.0',
     verbose=True,
-    dag=dag,
+    dag=dag
 )
 
 spark_submit_task.set_upstream(t1)

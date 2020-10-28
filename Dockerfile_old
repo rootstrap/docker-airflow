@@ -1,5 +1,4 @@
-# VERSION 1.10.9
-# AUTHOR: Matthieu "Puckel_" Roisil
+# VERSION 1.10.12
 # DESCRIPTION: Basic Airflow container
 # BUILD: docker build --rm -t puckel/docker-airflow .
 # SOURCE: https://github.com/puckel/docker-airflow
@@ -15,7 +14,7 @@ ENV TERM linux
 ARG AIRFLOW_VERSION=1.10.12
 ARG AIRFLOW_USER_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
-ARG PYTHON_DEPS="boto3 boto botocore"
+ARG PYTHON_DEPS=""
 ENV AIRFLOW_HOME=${AIRFLOW_USER_HOME}
 
 # Define en_US.
@@ -27,7 +26,6 @@ ENV LC_MESSAGES en_US.UTF-8
 
 # Disable noisy "Handling signal" log messages:
 # ENV GUNICORN_CMD_ARGS --log-level WARNING
-
 
 RUN set -ex \
     && buildDeps=' \
@@ -61,14 +59,12 @@ RUN set -ex \
     && pip install pyOpenSSL \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
-    && pip install pyspark \
-    && pip install findspark \
-    && pip install apache-airflow[crypto,celery,aws,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
+    && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis==3.2' \
     && pip uninstall -y SQLAlchemy \
     && pip install SQLAlchemy==1.3.15 \
+    && pip install boto3 botocore \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
-    && apt-get install -y vim \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
@@ -79,7 +75,6 @@ RUN set -ex \
         /usr/share/man \
         /usr/share/doc \
         /usr/share/doc-base
-
 # JAVA
 RUN apt-get update \
     && mkdir -p /usr/share/man/man1 \
@@ -88,8 +83,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-
-   
+ 
 COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 
@@ -97,25 +91,17 @@ RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 
 EXPOSE 8080 5555 8793
 
-# spark 
-ARG APACHE_MIRROR_SERVER=http://www-us.apache.org   
-ARG SPARK_VERSION=3.0.1 
-ARG HADOOP_VERSION=2.7  
-    
-RUN wget -q -O - ${APACHE_MIRROR_SERVER}/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz | tar -xzf - -C / \   
-    && mv /spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /spark    
-ENV SPARK_HOME /spark   
-ENV JAVA_HOME /usr/ 
-ENV PATH $JAVA_HOME/bin:$SPARK_HOME/jars:$PATH
+# spark
+ARG APACHE_MIRROR_SERVER=http://www-us.apache.org
+ARG SPARK_VERSION=3.0.1
+ARG HADOOP_VERSION=2.7 
+ 
+RUN wget -q -O - ${APACHE_MIRROR_SERVER}/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz | tar -xzf - -C / \
+    && mv /spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /spark 
 
-WORKDIR $SPARK_HOME
-
-RUN wget https://repo1.maven.org/maven2/com/databricks/spark-xml_2.12/0.6.0/spark-xml_2.12-0.6.0.jar -P jars
-RUN wget https://repo1.maven.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.jar -P jars
-
-CMD ["bin/spark-class", "org.apache.spark.deploy.master.Master"]
-
-ENV PYTHONPATH=${SPARK_HOME}/python;${SPARK_HOME}/python/lib/py4j-0.10.7-src.zip
+ENV SPARK_HOME /spark
+ENV JAVA_HOME /usr/
+ENV PATH $JAVA_HOME/bin:$PATH
 
 USER airflow
 WORKDIR ${AIRFLOW_USER_HOME}
