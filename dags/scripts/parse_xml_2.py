@@ -19,8 +19,8 @@ if __name__ == "__main__":
     sc=spark.sparkContext
     sc.setSystemProperty("com.amazonaws.services.s3.enableV4", "true")
 
-    ACCESS_KEY_ID = "AKIA2VGYGUP2HWDXQVWM"
-    SECRET_ACCESS_KEY = "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"
+    ACCESS_KEY_ID = "XXX"
+    SECRET_ACCESS_KEY = "XXXXX"
 
     hadoop_conf = spark._jsc.hadoopConfiguration()
     hadoop_conf.set("fs.s3a.impl","org.apache.hadoop.fs.s3a.S3AFileSystem")
