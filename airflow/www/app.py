@@ -73,7 +73,7 @@ def create_app(config=None, testing=False, app_name="Airflow"):
     session_lifetime_days = conf.getint('webserver', 'SESSION_LIFETIME_DAYS', fallback=30)
     flask_app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=session_lifetime_days)
 
-    flask_app.config.from_pyfile(settings.WEBSERVER_CONFIG, silent=True)
+    flask_app.config.from_pyfile(settings.WEBSERVER_CONFIG, silent=False)
     flask_app.config['APP_NAME'] = app_name
     flask_app.config['TESTING'] = testing
     flask_app.config['SQLALCHEMY_DATABASE_URI'] = conf.get('core', 'SQL_ALCHEMY_CONN')
