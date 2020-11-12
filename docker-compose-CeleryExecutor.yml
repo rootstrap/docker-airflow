@@ -52,7 +52,7 @@ services:
             # - REDIS_PASSWORD=redispass
         ports:
             - "5555:5555"
-        command: flower
+        command: celery flower
 
     scheduler:
         image: ctakes-mr-edge:latest

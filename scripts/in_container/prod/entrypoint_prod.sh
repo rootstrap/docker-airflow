@@ -19,6 +19,18 @@
 # Might be empty
 AIRFLOW_COMMAND="${1}"
 
+# TODO: Change this
+
+: "${AIRFLOW__CORE__EXECUTOR:="CeleryExecutor"}"
+: "${AIRFLOW__CORE__SQL_ALCHEMY_CONN:="postgresql+psycopg2://airflow:airflow@postgres/airflow"}"
+: "${AIRFLOW__CELERY__RESULT_BACKEND:="db+postgresql://airflow:airflow@postgres/airflow"}"
+
+export \
+  AIRFLOW__CORE__EXECUTOR \
+  AIRFLOW__CORE__SQL_ALCHEMY_CONN \
+  AIRFLOW__CELERY__RESULT_BACKEND 
+
+
 set -euo pipefail
 
 function verify_db_connection {
@@ -99,8 +111,33 @@ if ! whoami &> /dev/null; then
 fi
 
 
-# if no DB configured - use sqlite db by default
-AIRFLOW__CORE__SQL_ALCHEMY_CONN="${AIRFLOW__CORE__SQL_ALCHEMY_CONN:="sqlite:///${AIRFLOW_HOME}/airflow.db"}"
+
+# Derive useful variables from the AIRFLOW__ variables provided explicitly by the user
+POSTGRES_ENDPOINT=$(echo -n "$AIRFLOW__CORE__SQL_ALCHEMY_CONN" | cut -d '/' -f3 | sed -e 's,.*@,,')
+POSTGRES_HOST=$(echo -n "$POSTGRES_ENDPOINT" | cut -d ':' -f1)
+POSTGRES_PORT=$(echo -n "$POSTGRES_ENDPOINT" | cut -d ':' -f2)
+
+
+# Default values corresponding to the default compose files
+: "${REDIS_PROTO:="redis://"}"
+: "${REDIS_HOST:="redis"}"
+: "${REDIS_PORT:="6379"}"
+: "${REDIS_PASSWORD:=""}"
+: "${REDIS_DBNUM:="1"}"
+
+# When Redis is secured by basic auth, it does not handle the username part of basic auth, only a token
+if [ -n "$REDIS_PASSWORD" ]; then
+  REDIS_PREFIX=":${REDIS_PASSWORD}@"
+else
+  REDIS_PREFIX=
+fi
+
+AIRFLOW__CELERY__BROKER_URL="${REDIS_PROTO}${REDIS_PREFIX}${REDIS_HOST}:${REDIS_PORT}/${REDIS_DBNUM}"
+export AIRFLOW__CELERY__BROKER_URL
+
+
+# wait_for_port "Redis" "$REDIS_HOST" "$REDIS_PORT"
+
 
 verify_db_connection "${AIRFLOW__CORE__SQL_ALCHEMY_CONN}"
 
@@ -111,13 +148,30 @@ if [[ -n ${AIRFLOW__CELERY__BROKER_URL=} ]] && \
     verify_db_connection "${AIRFLOW__CELERY__BROKER_URL}"
 fi
 
-if [[ ${AIRFLOW_COMMAND} == "bash" ]]; then
-   shift
-   exec "/bin/bash" "${@}"
-elif [[ ${AIRFLOW_COMMAND} == "python" ]]; then
-   shift
-   exec "python" "${@}"
-fi
 
-# Run the command
-exec airflow "${@}"
+case "$1" in
+  webserver)
+    exec airflow db init
+    exec airflow create_user -r Admin -u admin -e admin@example.com -f admin -l user -p test
+    exec airflow webserver
+    ;;
+  worker|scheduler)
+    # Give the webserver time to run initdb.
+    sleep 10
+    exec airflow "$@"
+    ;;
+  flower)
+    sleep 10
+    exec airflow "$@"
+    ;;
+  version)
+    exec airflow "$@"
+    ;;
+  *)
+    # The command is something like bash, not an airflow subcommand. Just run it in the right environment.
+    exec "$@"
+    ;;
+esac
+
+
+
