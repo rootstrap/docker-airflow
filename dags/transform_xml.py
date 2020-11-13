@@ -1,8 +1,10 @@
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.s3_file_transform_operator import S3FileTransformOperator
+from airflow.operators.dummy_operator import DummyOperator
 
 from datetime import datetime, timedelta
+from airflow.models import Variable
 
 
 default_args = {
@@ -16,19 +18,32 @@ default_args = {
     "retry_delay": timedelta(minutes=5)
 }
 
-with DAG("s3-dag", default_args=default_args, schedule_interval= '@once') as dag:
+source_s3_path = Variable.get("source_s3_path")
+dest_s3_path = Variable.get("dest_s3_path")
+
+
+with DAG("s3_transformer", default_args=default_args, schedule_interval= '@once') as dag:
+
+
+    start = DummyOperator(task_id='start')
+
     t1 = BashOperator(
         task_id='bash_test',
-        bash_command='echo 1',
-        dag=dag
+        bash_command='echo "Testing File transform" > s3_conn_test.txt'
     )
+
+
     transformer = S3FileTransformOperator(
-        task_id='S3_ETL_OP',
-        source_s3_key='s3://medical-records/origin/105.xml',
-        dest_s3_key='s3://medical-records/s3/105.parquet',
+        task_id='transform_s3_data',
+        description='transform_s3_data',
+        source_s3_key=source_s3_path,
+        dest_s3_key=dest_s3_path,
         replace=True,
         transform_script='/usr/local/airflow/dags/scripts/transform.py',
         source_aws_conn_id='s3_connection',
         dest_aws_conn_id='s3_connection'
     )
-    t1.set_upstream(transformer)
+
+    t1.set_upstream(start)
+    transformer.set_upstream(t1)
+
