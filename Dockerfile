@@ -34,7 +34,7 @@
 #                        much smaller.
 #
 ARG AIRFLOW_VERSION="2.0.0.dev0"
-ARG AIRFLOW_EXTRAS="async,aws,azure,celery,elasticsearch,gcp,kubernetes,mysql,postgres,redis,slack,ssh"
+ARG AIRFLOW_EXTRAS="async,aws,azure,celery,dask,elasticsearch,gcp,kubernetes,mysql,postgres,redis,slack,ssh,statsd,virtualenv"
 ARG ADDITIONAL_AIRFLOW_EXTRAS=""
 ARG ADDITIONAL_PYTHON_DEPS=""
 
@@ -46,7 +46,6 @@ ARG CASS_DRIVER_BUILD_CONCURRENCY="8"
 
 ARG PYTHON_BASE_IMAGE="python:3.6-slim-buster"
 ARG PYTHON_MAJOR_MINOR_VERSION="3.6"
-
 
 ##############################################################################################
 # This is the build image where we build all dependencies
@@ -424,5 +423,4 @@ LABEL org.apache.airflow.mainImage.buildId=${BUILD_ID}
 LABEL org.apache.airflow.mainImage.commitSha=${COMMIT_SHA}
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]
-
 CMD ["--help"]
