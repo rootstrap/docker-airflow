@@ -36,7 +36,6 @@
 ARG AIRFLOW_VERSION="2.0.0.dev0"
 ARG AIRFLOW_EXTRAS="async,aws,azure,celery,dask,elasticsearch,gcp,kubernetes,mysql,postgres,redis,slack,ssh,statsd,virtualenv"
 ARG ADDITIONAL_AIRFLOW_EXTRAS=""
-ARG ADDITIONAL_PYTHON_DEPS=""
 
 ARG AIRFLOW_HOME=/opt/airflow
 ARG AIRFLOW_UID="50000"
@@ -44,8 +43,8 @@ ARG AIRFLOW_GID="50000"
 
 ARG CASS_DRIVER_BUILD_CONCURRENCY="8"
 
-ARG PYTHON_BASE_IMAGE="python:3.6-slim-buster"
-ARG PYTHON_MAJOR_MINOR_VERSION="3.6"
+ARG PYTHON_BASE_IMAGE="python:3.7-slim-buster"
+ARG PYTHON_MAJOR_MINOR_VERSION="3.7"
 
 ##############################################################################################
 # This is the build image where we build all dependencies
@@ -68,6 +67,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
            curl \
            gnupg2 \
+           wget \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -193,7 +193,7 @@ ENV CASS_DRIVER_BUILD_CONCURRENCY=${CASS_DRIVER_BUILD_CONCURRENCY}
 ARG AIRFLOW_VERSION
 ENV AIRFLOW_VERSION=${AIRFLOW_VERSION}
 
-ARG ADDITIONAL_PYTHON_DEPS=""
+ARG ADDITIONAL_PYTHON_DEPS="pyspark"
 ENV ADDITIONAL_PYTHON_DEPS=${ADDITIONAL_PYTHON_DEPS}
 
 ARG AIRFLOW_INSTALL_SOURCES="."
@@ -298,6 +298,7 @@ ENV DEBIAN_FRONTEND=noninteractive LANGUAGE=C.UTF-8 LANG=C.UTF-8 LC_ALL=C.UTF-8 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
            curl \
+           wget \
            gnupg2 \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
@@ -398,7 +399,35 @@ RUN chmod a+x /entrypoint /clean-logs
 # See https://github.com/apache/airflow/issues/9248
 RUN chmod g=u /etc/passwd
 
-ENV PATH="${AIRFLOW_USER_HOME_DIR}/.local/bin:${PATH}"
+# JAVA
+RUN apt-get update \
+    && mkdir -p /usr/share/man/man1 \
+    && apt-get install -y openjdk-11-jre-headless \
+    && apt-get install -y openjdk-11-jre \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# spark 
+ARG APACHE_MIRROR_SERVER=http://www-us.apache.org   
+ARG SPARK_VERSION=3.0.1 
+ARG HADOOP_VERSION=2.7  
+    
+RUN wget -q -O - ${APACHE_MIRROR_SERVER}/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz | tar -xzf - -C / \   
+    && mv /spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /spark    
+ENV SPARK_HOME /spark   
+ENV JAVA_HOME /usr
+
+WORKDIR $SPARK_HOME
+
+RUN wget https://repo1.maven.org/maven2/com/databricks/spark-xml_2.12/0.6.0/spark-xml_2.12-0.6.0.jar -P jars
+RUN wget https://repo1.maven.org/maven2/commons-io/commons-io/2.6/commons-io-2.6.jar -P jars
+
+CMD ["bin/spark-class", "org.apache.spark.deploy.master.Master"]
+
+ENV PYTHONPATH=${SPARK_HOME}/python;${SPARK_HOME}/python/lib/py4j-0.10.7-src.zip
+
+
+ENV PATH="$JAVA_HOME/bin:$SPARK_HOME/jars:${AIRFLOW_USER_HOME_DIR}/.local/bin:${PATH}"
 ENV GUNICORN_CMD_ARGS="--worker-tmp-dir /dev/shm"
 
 WORKDIR ${AIRFLOW_HOME}
@@ -421,6 +450,7 @@ LABEL org.apache.airflow.uid="${AIRFLOW_UID}"
 LABEL org.apache.airflow.gid="${AIRFLOW_GID}"
 LABEL org.apache.airflow.mainImage.buildId=${BUILD_ID}
 LABEL org.apache.airflow.mainImage.commitSha=${COMMIT_SHA}
+
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/entrypoint"]
 CMD ["--help"]

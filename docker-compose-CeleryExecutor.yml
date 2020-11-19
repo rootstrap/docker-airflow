@@ -18,20 +18,24 @@ services:
     airflow-dbinit:
         image: ctakes-mr-edge:latest
         container_name: airflow-dbinit
+        depends_on:
+            - postgres
         command: db init
         
 
     airflow-dbuser:
         image: ctakes-mr-edge:latest
         container_name: airflow-dbuser
+        depends_on:
+            - airflow-dbinit
         command: users create -r Admin -u admin -e admin@example.com -f admin -l user -p test
 
     webserver:
         image: ctakes-mr-edge:latest
         restart: "always"
         depends_on:
-            - postgres
             - redis
+            - airflow-dbuser
         environment:
             - LOAD_EX=n
             - EXECUTOR=Celery
