@@ -9,6 +9,9 @@ from random import random
 from operator import add
 import os
 import shutil
+import uuid
+from pyspark.sql.functions import lit
+
 
 output=sys.argv[2]
 input_file = sys.argv[1]
@@ -29,31 +32,15 @@ schema = StructType([
     StructField('TAGS', StringType(), True),
     StructField('TEXT', StringType(), True)
     ])
-"""StructField('ADVANCED-CAD', StringType(), True),
-StructField('ALCOHOL-ABUSE', StringType(), True),
-StructField('ASP-FOR-MI', StringType(), True),
-StructField('CREATININE', StringType(), True),
-StructField('DIETSUPP-2MOS', StringType(), True),
-StructField('DRUG-ABUSE', StringType(), True),
-StructField('ENGLISH', StringType(), True),
-StructField('HBA1C', StringType(), True),
-StructField('KETO-1YR', StringType(), True),
-StructField('MAJOR-DIABETES', StringType(), True),
-StructField('MAKES-DECISIONS', StringType(), True),
-StructField('MI-6MOS', StringType(), True),"""
 
 df = spark.read.format("com.databricks.spark.xml") \
         .options(rowTag="PatientMatching") \
         .load(input_file, schema=schema)
 
 df.printSchema()
-print(df.show())
 
-"""import uuid
 id = str(uuid.uuid4())
-df = df.withColumn("id", id)
-df.show(truncate=False)
-"""
+df = df.withColumn("id", lit(id))
 
 df.write.format("com.databricks.spark.csv").option("header", "true").mode("overwrite").save(temporary_directory)
 
