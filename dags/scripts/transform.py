@@ -39,6 +39,7 @@ df = spark.read.format("com.databricks.spark.xml") \
 
 df.printSchema()
 
+# Add id
 id = str(uuid.uuid4())
 df = df.withColumn("id", lit(id))
 

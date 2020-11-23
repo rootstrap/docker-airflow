@@ -1,0 +1,4 @@
+{
+    "raw_path": "s3://patients-records/raw-files",
+    "cleaned_path": "s3://patients-records/cleaned"
+}

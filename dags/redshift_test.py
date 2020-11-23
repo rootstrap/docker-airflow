@@ -1,6 +1,7 @@
+
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.s3_file_transform_operator import S3FileTransformOperator
+from airflow.providers.amazon.aws.transfers.s3_to_redshift import S3ToRedshiftOperator
 from airflow.operators.dummy_operator import DummyOperator
 
 from datetime import datetime, timedelta
@@ -19,10 +20,9 @@ default_args = {
 }
 
 
-source_s3_path = Variable.get("raw_path")
-dest_s3_path = Variable.get("cleaned_path")
+s3_path = Variable.get("cleaned_path")
 
-with DAG("s3_transformer", default_args=default_args, schedule_interval= '@once') as dag:
+with DAG("redshift_transformer", default_args=default_args, schedule_interval= '@once') as dag:
 
 
     start = DummyOperator(task_id='start')
@@ -32,15 +32,18 @@ with DAG("s3_transformer", default_args=default_args, schedule_interval= '@once'
         bash_command='echo "Testing File transform" > s3_conn_test.txt'
     )
 
-    transformer = S3FileTransformOperator(
-        task_id='transform_s3_data',
-        source_s3_key=source_s3_path + '/100.xml',
-        dest_s3_key=dest_s3_path + '/100.csv', 
-        replace=True,
-        transform_script='/opt/airflow/dags/scripts/transform.py',
-        source_aws_conn_id='s3_connection',
-        dest_aws_conn_id='s3_connection'
+    s3_to_redshift_transformer = S3ToRedshiftOperator(
+    	task_id = 's3_to_redshift_transformer',
+        schema = 'PUBLIC',
+        table = 'patient',
+        s3_bucket = 'patients-records',
+        s3_key = s3_path + '/100.xml',
+        redshift_conn_id = 'redshift_connection',
+        aws_conn_id = 's3_connection',
+        copy_options = ['csv'],
+        truncate_table  = False
     )
 
+
     t1.set_upstream(start)
-    transformer.set_upstream(t1)
+    s3_to_redshift_transformer.set_upstream(t1)
