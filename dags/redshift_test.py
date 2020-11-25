@@ -20,8 +20,6 @@ default_args = {
 }
 
 
-s3_path = Variable.get("cleaned_path")
-
 with DAG("redshift_transformer", default_args=default_args, schedule_interval= '@once') as dag:
 
 
@@ -29,7 +27,7 @@ with DAG("redshift_transformer", default_args=default_args, schedule_interval= '
 
     t1 = BashOperator(
         task_id='bash_test',
-        bash_command='echo "Testing File transform" > s3_conn_test.txt'
+        bash_command='echo "Testing File transform"'
     )
 
     s3_to_redshift_transformer = S3ToRedshiftOperator(
@@ -37,10 +35,10 @@ with DAG("redshift_transformer", default_args=default_args, schedule_interval= '
         schema = 'PUBLIC',
         table = 'patient',
         s3_bucket = 'patients-records',
-        s3_key = s3_path + '/100.xml',
+        s3_key = 'cleaned/100.csv',
         redshift_conn_id = 'redshift_connection',
         aws_conn_id = 's3_connection',
-        copy_options = ['csv'],
+        copy_options = ["csv"],
         truncate_table  = False
     )
 

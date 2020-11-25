@@ -11,6 +11,7 @@ import os
 import shutil
 import uuid
 from pyspark.sql.functions import lit
+from pyspark.sql.functions import regexp_replace
 
 
 output=sys.argv[2]
@@ -41,9 +42,11 @@ df.printSchema()
 
 # Add id
 id = str(uuid.uuid4())
-df = df.withColumn("id", lit(id))
+df = df.withColumn("patient_id", lit(id))
 
-df.write.format("com.databricks.spark.csv").option("header", "true").mode("overwrite").save(temporary_directory)
+#df = df.withColumn('TEXT', regexp_replace('TEXT', '\"','""'))
+
+df.write.format("com.databricks.spark.csv").option("header", "false").option("escape", '"').mode("overwrite").save(temporary_directory)
 
 if (os.path.exists(temporary_directory + "_SUCCESS")):
 	print("Removing file " + temporary_directory + "_SUCCESS")
