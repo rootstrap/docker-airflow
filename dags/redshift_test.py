@@ -35,7 +35,7 @@ with DAG("redshift_transformer", default_args=default_args, schedule_interval= '
         schema = 'PUBLIC',
         table = 'patient',
         s3_bucket = 'patients-records',
-        s3_key = 'cleaned/100.csv',
+        s3_key = 'cleaned/',
         redshift_conn_id = 'redshift_connection',
         aws_conn_id = 's3_connection',
         copy_options = ["csv"],

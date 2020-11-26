@@ -16,17 +16,17 @@ from pyspark.sql.functions import regexp_replace
 
 output=sys.argv[2]
 input_file = sys.argv[1]
-temporary_directory="/tmp/output/"
+temporary_directory="/tmp/output/" + output
 
 if (os.path.exists(temporary_directory)):
 	shutil.rmtree(temporary_directory, ignore_errors=True)
 
 os.makedirs(temporary_directory)
 
-print("Starting data transformation...")
+print("Starting data transformation..." + input_file)
 spark = SparkSession\
         .builder\
-        .appName("split_records")\
+        .appName(input_file)\
         .getOrCreate()
 
 schema = StructType([
