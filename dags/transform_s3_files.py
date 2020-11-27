@@ -39,9 +39,10 @@ def load_files():
         files = files[1:]
     else:
         files = []
-    return list(map(lambda x:x.split('/')[1], files))
+    files = list(map(lambda x:x.split('/')[1], files))
+    return files
 
-def create_section(**context):
+def create_section():
     files = load_files()
     list_files = PythonOperator(task_id='list_files',
                     python_callable=load_files
