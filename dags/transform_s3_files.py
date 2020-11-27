@@ -35,16 +35,17 @@ def load_files():
     s3 = S3Hook(aws_conn_id='s3_connection')
     s3.get_conn()
     files = s3.list_keys(bucket_name='patients-records', prefix='raw-files/', delimiter='/')
-    if (len(files)>2):
+    if (len(files)>1):
         files = files[1:]
     else:
         files = []
-
     return list(map(lambda x:x.split('/')[1], files))
 
-def create_section():
+def create_section(**context):
     files = load_files()
-    print('Files:', files)
+    list_files = PythonOperator(task_id='list_files',
+                    python_callable=load_files
+        )
     process_files = [S3FileTransformOperator(
                 task_id=f'transform_s3_data-{i}',
                 source_s3_key= source_s3_path + '/' + file,
@@ -55,27 +56,19 @@ def create_section():
                 dest_aws_conn_id='s3_connection'
             ) for file,i in zip(files,range(len(files)))
     ]
+    
+    list_files >> process_files
 
-    process_files
-"""
-def create_section():
-    files = load_files()
-    process_files = [PythonOperator(task_id=f'task-{i}', 
-        python_callable=process_file, 
-        op_kwargs={'file': file}) for file,i in zip(files,range(len(files)))
-   ]
-
-    process_files
-"""
 with DAG(dag_id="batchfiles", default_args=default_args, schedule_interval= '@once') as dag:
 
-  
     start = DummyOperator(task_id='start')
 
     with TaskGroup("section", tooltip="Tasks for Section") as section:
         create_section()
 
     start  >> section 
+
+
 
 
 

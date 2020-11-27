@@ -16,7 +16,7 @@ from pyspark.sql.functions import regexp_replace
 
 output=sys.argv[2]
 input_file = sys.argv[1]
-temporary_directory="/tmp/output/" + output
+temporary_directory=output + "_tmp/"
 
 if (os.path.exists(temporary_directory)):
 	shutil.rmtree(temporary_directory, ignore_errors=True)
@@ -43,8 +43,6 @@ df.printSchema()
 # Add id
 id = str(uuid.uuid4())
 df = df.withColumn("patient_id", lit(id))
-
-#df = df.withColumn('TEXT', regexp_replace('TEXT', '\"','""'))
 
 df.write.format("com.databricks.spark.csv").option("header", "false").option("escape", '"').mode("overwrite").save(temporary_directory)
 
