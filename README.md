@@ -15,6 +15,30 @@ This repository contains **Dockerfile** of [apache-airflow](https://github.com/a
 * Install [Docker Compose](https://docs.docker.com/compose/install/)
 * Following the Airflow release from [Python Package Index](https://pypi.python.org/pypi/apache-airflow)
 
+## Infrastructure
+
+Use terraform folder under infrastructure code. 
+
+    cd infrastructure
+
+Add the following environment variables: 
+    
+    export AWS_ACCESS_KEY_ID=<>
+    export AWS_SECRET_ACCESS_KEY=<>
+
+ie. to "~/.bash_profile" and source ~/.bash_profile
+
+
+Execute
+    
+    terraform plan -out plan
+    terraform apply "plan"
+
+
+If some synchronicity problem happens, use 
+
+    terraform refresh
+
 ## Installation
 
 Pull the image from the Docker repository.
