@@ -42,10 +42,12 @@ t2 = DockerOperator(
     },
     command='/bin/bash -v $(pwd)/input:/input -v $(pwd)/output:/output -c \'echo "HI"\'',
     docker_url='unix://var/run/docker.sock',
-    network_mode='bridge'
+    network_mode='bridge',
+    dag=dag
 )
 t3 = BashOperator(
     task_id='print_hello',
-    bash_command='echo "hello world"'
+    bash_command='echo "hello world"', 
+    dag=dag
 )
 t1 >> t2 >> t3
