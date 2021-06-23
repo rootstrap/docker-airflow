@@ -29,6 +29,18 @@ resource "aws_security_group" "sg" {
     security_groups  = []
     self             = false
 
+  },
+  {
+    description      = "Port 8080"
+    protocol         = var.sg_ingress_proto
+    from_port        = var.sg_ingress_http8080
+    to_port          = var.sg_ingress_http8080
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+    prefix_list_ids  = []
+    security_groups  = []
+    self             = false
+
   }
   ]
  

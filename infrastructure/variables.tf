@@ -65,6 +65,12 @@ variable "sg_ingress_https" {
   default     = "433"
 }
 
+variable "sg_ingress_http8080" {
+  description = "Development port"
+  type        = string
+  default     = "8080"
+}
+
 variable "sg_egress_proto" {
   description = "Protocol used for the egress rule"
   type        = string
