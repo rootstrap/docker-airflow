@@ -60,6 +60,7 @@ RUN set -ex \
     && pip install SQLAlchemy==1.3.23 \
     && pip install Flask-SQLAlchemy==2.4.4 \
     && pip install docker-py \
+    && pip install docker \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
