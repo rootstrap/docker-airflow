@@ -59,7 +59,6 @@ RUN set -ex \
     && pip install pyOpenSSL \
     && pip install SQLAlchemy==1.3.15 \
     && pip install Flask-SQLAlchemy==2.4.4 \
-    && pip install docker-py \
     && pip install docker \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
