@@ -24,7 +24,7 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = DAG("ctakes", default_args=default_args, schedule_interval=timedelta(1))
+dag = DAG("ctakes", default_args=default_args, schedule_interval=timedelta(120))
 
 
 key = "844a62ef-ecf3-4cf7-ae8f-b3ddae2ff952" 
@@ -40,7 +40,7 @@ t2 = DockerOperator(
         'AF_OWNER': "{{ task.owner }}",
         'CTAKES_KEY': "{{key}}"
     },
-    command='/bin/bash -v $(pwd)/input:/input -v $(pwd)/output:/output -c \'echo "HI"\'',
+    command='/bin/bash -v /home/ubuntu/docker-airflow/input:/input -v /home/ubuntu/docker-airflow/output:/output -c \'echo "HI"\'',
     docker_url='unix://var/run/docker.sock',
     network_mode='bridge',
     dag=dag
