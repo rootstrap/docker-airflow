@@ -16,6 +16,7 @@ ARG AIRFLOW_VERSION=1.10.9
 ARG AIRFLOW_USER_HOME=/usr/local/airflow
 ARG AIRFLOW_DEPS=""
 ARG PYTHON_DEPS=""
+ARG DOCKER_GROUP_ID
 ENV AIRFLOW_HOME=${AIRFLOW_USER_HOME}
 
 # Define en_US.
@@ -57,6 +58,9 @@ RUN set -ex \
     && pip install -U pip setuptools wheel \
     && pip install pytz \
     && pip install pyOpenSSL \
+    && pip install SQLAlchemy==1.3.15 \
+    && pip install Flask-SQLAlchemy==2.4.4 \
+    && pip install docker \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
@@ -77,10 +81,17 @@ COPY script/entrypoint.sh /entrypoint.sh
 COPY config/airflow.cfg ${AIRFLOW_USER_HOME}/airflow.cfg
 
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
+RUN touch /var/run/docker.sock
+RUN chown -R airflow /var/run/docker.sock
 
 EXPOSE 8080 5555 8793
 
+USER root
+RUN groupadd -g $DOCKER_GROUP_ID docker && gpasswd -a airflow docker
+
 USER airflow
+
+
 WORKDIR ${AIRFLOW_USER_HOME}
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["webserver"]
