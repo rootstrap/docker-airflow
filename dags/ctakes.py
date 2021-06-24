@@ -24,7 +24,7 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = DAG("ctakes", default_args=default_args, schedule_interval=timedelta(120))
+dag = DAG("ctakes", default_args=default_args, schedule_interval=timedelta(1))
 
 
 key = "844a62ef-ecf3-4cf7-ae8f-b3ddae2ff952" 
