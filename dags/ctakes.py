@@ -32,7 +32,7 @@ key = "844a62ef-ecf3-4cf7-ae8f-b3ddae2ff952"
 t1 = BashOperator(task_id="print_date", bash_command="date", dag=dag)
 t2 = DockerOperator(
     task_id='docker_command',
-    image='rootstrap/ctakes',
+    image='rootstrap/ctakes:latest',
     api_version='auto',
     auto_remove=True,
     environment={
