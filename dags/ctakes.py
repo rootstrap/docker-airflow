@@ -40,7 +40,8 @@ t2 = DockerOperator(
         'AF_OWNER': "{{ task.owner }}",
         'CTAKES_KEY': "{{key}}"
     },
-    command='/bin/bash -v /home/ubuntu/docker-airflow/input:/input -v /home/ubuntu/docker-airflow/output:/output -c \'echo "HI"\'',
+    volumes=['/home/ubuntu/docker-airflow/input:/input','/home/ubuntu/docker-airflow/output:/output'],
+    command='/bin/bash -c \'echo "HI"\'',
     docker_url='unix://var/run/docker.sock',
     network_mode='bridge',
     dag=dag
